@@ -172,7 +172,8 @@ def single_prediction_mode(model):
                     st.subheader("Risk Probability Breakdown")
                     prob_data = {
                         'Risk Level': ['Low Risk (No Diabetes)', 'High Risk (Diabetes)'],
-                        'Probability': [probability[0], [probability[1]]}
+                        'Probability': [probability[0], [probability[1]]
+                                        }
                     prob_df = pd.DataFrame(prob_data)
                     st.dataframe(prob_df.style.format({'Probability': '{:.2%}'}))
                     
