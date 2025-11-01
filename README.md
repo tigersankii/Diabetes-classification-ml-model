@@ -1,4 +1,4 @@
-#🏥 Diabetes Prediction App
+# Diabetes Prediction App
 
 
 📖 Overview
