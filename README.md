@@ -6,7 +6,8 @@ A comprehensive Streamlit web application for predicting diabetes risk based on 
 
 ## Features
 
-# Single Prediction Mode
+## **Single Prediction Mode**
+
 Interactive input form with sliders for all medical parameters
 
 Real-time diabetes risk prediction
@@ -18,7 +19,8 @@ Probability breakdown with percentage scores
 Input validation with dataset value ranges
 
 
-**Batch Prediction Mode**
+## **Batch Prediction Mode**
+
 Upload CSV files for multiple patient predictions
 
 Automatic column validation and error handling
@@ -29,7 +31,9 @@ Color-coded risk level display
 
 Download predictions as CSV file
 
-🤖 Model Training & Analysis
+
+## Model Training & Analysis
+
 Train new Random Forest classifier
 
 Model performance evaluation with accuracy scores
@@ -40,16 +44,16 @@ Confusion matrix display
 
 Dataset statistics and distribution analysis
 
-🛠️ Installation
+## Installation
 Prerequisites
 Python 3.7 or higher
 
-pip (Python package manager)
+**pip (Python package manager)**
 
 Step-by-Step Setup
 Clone or Download the Project
 
-bash
+**bash**
 # Create project directory
 mkdir diabetes-prediction-app
 cd diabetes-prediction-app
@@ -69,7 +73,8 @@ Run the Application
 
 bash
 streamlit run diabetes_app.py
-📋 Requirements
+
+## Requirements
 Create a requirements.txt file with the following content:
 
 txt
@@ -79,15 +84,19 @@ numpy==1.24.3
 scikit-learn==1.3.0
 matplotlib==3.7.1
 seaborn==0.12.2
-🎯 Usage Guide
+
+
+## Usage Guide
+
 Single Patient Prediction
+
 Navigate to Single Prediction Mode
 
 Use the sidebar to select "Single Prediction"
 
 Adjust all 8 medical parameters using sliders
 
-Input Parameters:
+**Input Parameters:**
 
 Pregnancies: Number of times pregnant (0-17)
 
@@ -105,7 +114,7 @@ DiabetesPedigreeFunction: Diabetes pedigree function (0.0-2.5)
 
 Age: Age in years (21-81)
 
-Get Results:
+**Get Results:**
 
 Click "Predict Diabetes Risk" button
 
@@ -114,7 +123,8 @@ View color-coded risk assessment
 Check probability percentages
 
 Batch Predictions
-Prepare CSV File:
+
+**Prepare CSV File:**
 
 Ensure CSV has columns: Pregnancies, Glucose, BloodPressure, SkinThickness, Insulin, BMI, DiabetesPedigreeFunction, Age
 
@@ -147,7 +157,9 @@ Confusion matrix
 
 Dataset statistics
 
-📊 Dataset Information
+
+## Dataset Information
+
 The application uses the Pima Indians Diabetes Dataset containing:
 
 768 patient records
@@ -158,7 +170,7 @@ Binary outcome (0: Non-diabetic, 1: Diabetic)
 
 Class distribution: ~35% diabetic, ~65% non-diabetic
 
-Feature Descriptions:
+**Feature Descriptions:** 
 Pregnancies: Number of times pregnant
 
 Glucose: Plasma glucose concentration 2 hours in oral glucose tolerance test
@@ -175,8 +187,11 @@ DiabetesPedigreeFunction: Diabetes pedigree function (genetic risk)
 
 Age: Age in years
 
-🏗️ Model Architecture
+
+## Model Architecture
+
 Algorithm: Random Forest Classifier
+
 Ensemble method with multiple decision trees
 
 100 estimators (trees)
@@ -194,8 +209,9 @@ Robust to outliers and missing values
 
 Provides feature importance scores
 
-🎨 Interface Features
-Visual Elements:
+
+## Interface Features
+**Visual Elements:**
 Responsive layout with multiple columns
 
 Color-coded risk indicators
@@ -206,7 +222,7 @@ Professional medical styling
 
 Real-time validation
 
-User Experience:
+**User Experience:**
 Intuitive navigation with sidebar
 
 Clear error messages
@@ -215,7 +231,8 @@ Loading indicators for long operations
 
 Export functionality for results
 
-🔧 Technical Details
+## Technical Details
+
 File Structure:
 text
 diabetes-prediction-app/
@@ -224,7 +241,7 @@ diabetes-prediction-app/
 ├── diabetes.csv            # Dataset file
 ├── best_model.pkl         # Trained model (auto-generated)
 └── requirements.txt       # Python dependencies
-Key Functions:
+**Key Functions:**
 load_model(): Loads pre-trained model from pickle file
 
 train_new_model(): Trains new Random Forest model
@@ -235,7 +252,7 @@ batch_prediction_mode(): Processes CSV file uploads
 
 model_training_mode(): Manages model training and analysis
 
-⚠️ Important Notes
+## Important Notes
 Medical Disclaimer:
 ⚠️ WARNING: This application is for educational and demonstration purposes only. It should not be used for actual medical diagnosis or treatment decisions. Always consult healthcare professionals for medical advice.
 
@@ -253,7 +270,7 @@ Batch processing works best with CSV files under 10MB
 
 Model training may take 10-30 seconds depending on hardware
 
-🐛 Troubleshooting
+## Troubleshooting
 Common Issues:
 Model file not found:
 
@@ -279,7 +296,7 @@ text
 Error: Port 8501 is already in use
 Solution: Use streamlit run diabetes_app.py --server.port 8502
 
-📈 Future Enhancements
+## Future Enhancements
 Potential improvements for the application:
 
 Add more machine learning algorithms for comparison
@@ -298,7 +315,7 @@ Add multi-language support
 
 Include API endpoints
 
-👥 Contributing
+## Contributing
 To contribute to this project:
 
 Fork the repository
@@ -311,10 +328,10 @@ Test thoroughly
 
 Submit a pull request
 
-📄 License
+## License
 This project is intended for educational purposes. Please ensure proper attribution when using or modifying the code.
 
-🆘 Support
+## Support
 For issues and questions:
 
 Check the troubleshooting section above
