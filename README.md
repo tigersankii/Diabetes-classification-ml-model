@@ -1,11 +1,12 @@
 # Diabetes Prediction App
 
 
-📖 Overview
+## Overview
 A comprehensive Streamlit web application for predicting diabetes risk based on patient medical data. This machine learning application uses the Pima Indians Diabetes Dataset to classify patients as high or low risk for diabetes.
 
-🚀 Features
-🔍 Single Prediction Mode
+## Features
+
+# Single Prediction Mode
 Interactive input form with sliders for all medical parameters
 
 Real-time diabetes risk prediction
@@ -16,7 +17,8 @@ Probability breakdown with percentage scores
 
 Input validation with dataset value ranges
 
-📊 Batch Prediction Mode
+
+**Batch Prediction Mode**
 Upload CSV files for multiple patient predictions
 
 Automatic column validation and error handling
