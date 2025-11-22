@@ -2,11 +2,13 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import pickle
+import os
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 import matplotlib.pyplot as plt
 import seaborn as sns
+from io import StringIO
 
 # Set page configuration
 st.set_page_config(
@@ -44,39 +46,121 @@ st.markdown("""
         padding: 15px;
         border-radius: 10px;
     }
+    .error-box {
+        background-color: #ffe6e6;
+        padding: 1.5rem;
+        border-radius: 10px;
+        border-left: 5px solid #ff4444;
+        margin: 1rem 0;
+    }
+    .info-box {
+        background-color: #e6f3ff;
+        padding: 1.5rem;
+        border-radius: 10px;
+        border-left: 5px solid #1f77b4;
+        margin: 1rem 0;
+    }
 </style>
 """, unsafe_allow_html=True)
 
+# Sample diabetes data for demo purposes
+def create_sample_data():
+    """Create sample diabetes data for demo purposes"""
+    np.random.seed(42)
+    n_samples = 768
+    
+    data = {
+        'Pregnancies': np.random.randint(0, 18, n_samples),
+        'Glucose': np.random.randint(0, 200, n_samples),
+        'BloodPressure': np.random.randint(0, 123, n_samples),
+        'SkinThickness': np.random.randint(0, 100, n_samples),
+        'Insulin': np.random.randint(0, 847, n_samples),
+        'BMI': np.round(np.random.uniform(0, 67.1, n_samples), 1),
+        'DiabetesPedigreeFunction': np.round(np.random.uniform(0.08, 2.5, n_samples), 3),
+        'Age': np.random.randint(21, 82, n_samples),
+        'Outcome': np.random.randint(0, 2, n_samples)
+    }
+    
+    return pd.DataFrame(data)
+
 @st.cache_resource
 def load_model():
+    """Load existing model or create a demo one"""
     try:
-        with open('ml_model.pkl', 'rb') as file:
-            model = pickle.load(file)
-        return model
-    except FileNotFoundError:
-        st.error("Model file 'best_model.pkl' not found. Please train a model first.")
-        return None
+        if os.path.exists('best_model.pkl'):
+            with open('best_model.pkl', 'rb') as file:
+                model = pickle.load(file)
+            return model, "Trained model loaded successfully"
+        else:
+            # Create and return a demo model
+            return create_demo_model()
+    except Exception as e:
+        st.error(f"Error loading model: {str(e)}")
+        return create_demo_model()
+
+def create_demo_model():
+    """Create a demo model for testing"""
+    try:
+        data = create_sample_data()
+        X = data.drop('Outcome', axis=1)
+        y = data['Outcome']
+        
+        model = RandomForestClassifier(n_estimators=50, random_state=42)
+        model.fit(X, y)
+        
+        return model, "Demo model created successfully (using sample data)"
+    except Exception as e:
+        return None, f"Error creating demo model: {str(e)}"
+
+def load_data():
+    """Load diabetes data with error handling"""
+    try:
+        # First try to load from uploaded file in session state
+        if 'diabetes_data' in st.session_state:
+            return st.session_state.diabetes_data, "Data loaded from session"
+        
+        # Then try to load from CSV file
+        if os.path.exists('diabetes.csv'):
+            data = pd.read_csv('diabetes.csv')
+            st.session_state.diabetes_data = data
+            return data, "Data loaded from diabetes.csv file"
+        
+        # If no file exists, create sample data
+        data = create_sample_data()
+        st.session_state.diabetes_data = data
+        return data, "Using sample data (upload your own CSV for better results)"
+        
+    except Exception as e:
+        st.error(f"Error loading data: {str(e)}")
+        # Return sample data as fallback
+        data = create_sample_data()
+        st.session_state.diabetes_data = data
+        return data, "Using sample data due to error"
 
 def train_new_model():
-    # Load and prepare data
-    data = pd.read_csv('diabetes.csv')
-    
-    # Split features and target
-    X = data.drop('Outcome', axis=1)
-    y = data['Outcome']
-    
-    # Split data
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    
-    # Train model
-    model = RandomForestClassifier(n_estimators=100, random_state=42)
-    model.fit(X_train, y_train)
-    
-    # Save model
-    with open('best_model.pkl', 'wb') as file:
-        pickle.dump(model, file)
-    
-    return model, X_test, y_test
+    """Train a new model with the current data"""
+    try:
+        data, message = load_data()
+        
+        # Split features and target
+        X = data.drop('Outcome', axis=1)
+        y = data['Outcome']
+        
+        # Split data
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        
+        # Train model
+        model = RandomForestClassifier(n_estimators=100, random_state=42)
+        model.fit(X_train, y_train)
+        
+        # Save model
+        with open('best_model.pkl', 'wb') as file:
+            pickle.dump(model, file)
+        
+        return model, X_test, y_test, "Model trained successfully"
+        
+    except Exception as e:
+        return None, None, None, f"Error training model: {str(e)}"
 
 def main():
     st.markdown('<h1 class="main-header">🏥 Diabetes Prediction App</h1>', unsafe_allow_html=True)
@@ -86,9 +170,37 @@ def main():
     app_mode = st.sidebar.selectbox("Choose App Mode", 
                                   ["Single Prediction", "Batch Prediction", "Model Training & Analysis"])
     
-    # Load or train model
-    model = load_model()
+    # Data upload section in sidebar
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("📁 Data Management")
     
+    uploaded_file = st.sidebar.file_uploader("Upload Diabetes CSV", type="csv")
+    
+    if uploaded_file is not None:
+        try:
+            data = pd.read_csv(uploaded_file)
+            st.session_state.diabetes_data = data
+            st.sidebar.success(f"✅ Data uploaded successfully! ({len(data)} records)")
+            
+            # Show basic info about uploaded data
+            with st.sidebar.expander("Uploaded Data Info"):
+                st.write(f"**Columns:** {list(data.columns)}")
+                st.write(f"**Shape:** {data.shape}")
+                if 'Outcome' in data.columns:
+                    st.write(f"**Diabetic Patients:** {data['Outcome'].sum()} ({data['Outcome'].mean():.1%})")
+        except Exception as e:
+            st.sidebar.error(f"Error reading file: {str(e)}")
+    
+    # Load model
+    model_result = load_model()
+    if model_result[0] is not None:
+        model, model_message = model_result
+        st.sidebar.info(f"🤖 {model_message}")
+    else:
+        st.sidebar.error("❌ No model available")
+        model = None
+    
+    # App modes
     if app_mode == "Single Prediction":
         single_prediction_mode(model)
     elif app_mode == "Batch Prediction":
@@ -168,7 +280,7 @@ def single_prediction_mode(model):
                         )
                         st.success("This patient shows low risk factors for diabetes.")
                     
-                    # Show probability breakdown - FIXED SYNTAX ERROR
+                    # Show probability breakdown
                     st.subheader("Risk Probability Breakdown")
                     prob_data = {
                         'Risk Level': ['Low Risk (No Diabetes)', 'High Risk (Diabetes)'],
@@ -254,20 +366,27 @@ def batch_prediction_mode(model):
                 
         except Exception as e:
             st.error(f"Error processing file: {str(e)}")
+    else:
+        st.info("💡 Please upload a CSV file with patient data to get batch predictions.")
 
 def model_training_mode():
     st.header("🤖 Model Training & Analysis")
     
-    # Load data
-    data = pd.read_csv('diabetes.csv')
+    # Load data with error handling
+    data, data_message = load_data()
+    
+    st.markdown(f'<div class="info-box">{data_message}</div>', unsafe_allow_html=True)
     
     col1, col2 = st.columns([2, 1])
     
     with col1:
         st.subheader("Dataset Overview")
         st.write(f"**Total Records:** {len(data)}")
-        st.write(f"**Diabetic Patients:** {data['Outcome'].sum()} ({data['Outcome'].mean():.1%})")
-        st.write(f"**Non-Diabetic Patients:** {len(data) - data['Outcome'].sum()} ({1 - data['Outcome'].mean():.1%})")
+        if 'Outcome' in data.columns:
+            st.write(f"**Diabetic Patients:** {data['Outcome'].sum()} ({data['Outcome'].mean():.1%})")
+            st.write(f"**Non-Diabetic Patients:** {len(data) - data['Outcome'].sum()} ({1 - data['Outcome'].mean():.1%})")
+        else:
+            st.warning("No 'Outcome' column found in the data. Using sample data structure.")
         
         # Show data preview
         with st.expander("View Dataset Sample"):
@@ -282,8 +401,13 @@ def model_training_mode():
         # Check for missing values
         missing_values = data.isnull().sum()
         st.write("Missing Values:")
+        missing_found = False
         for col, missing in missing_values.items():
-            st.write(f"- {col}: {missing} ({missing/len(data):.1%})")
+            if missing > 0:
+                st.write(f"- {col}: {missing} ({missing/len(data):.1%})")
+                missing_found = True
+        if not missing_found:
+            st.write("✅ No missing values found")
     
     # Train new model
     st.markdown("---")
@@ -291,39 +415,43 @@ def model_training_mode():
     
     if st.button("🔄 Train New Model", use_container_width=True):
         with st.spinner("Training model... This may take a few seconds."):
-            model, X_test, y_test = train_new_model()
-            st.success("Model trained successfully!")
+            model, X_test, y_test, train_message = train_new_model()
             
-            # Model evaluation
-            y_pred = model.predict(X_test)
-            accuracy = accuracy_score(y_test, y_pred)
-            
-            st.metric("Model Accuracy", f"{accuracy:.2%}")
-            
-            # Feature importance
-            st.subheader("Feature Importance")
-            feature_importance = pd.DataFrame({
-                'feature': X_test.columns,
-                'importance': model.feature_importances_
-            }).sort_values('importance', ascending=True)
-            
-            fig, ax = plt.subplots(figsize=(10, 6))
-            ax.barh(feature_importance['feature'], feature_importance['importance'])
-            ax.set_xlabel('Importance')
-            ax.set_title('Feature Importance in Diabetes Prediction')
-            st.pyplot(fig)
-            
-            # Confusion Matrix
-            st.subheader("Confusion Matrix")
-            cm = confusion_matrix(y_test, y_pred)
-            fig, ax = plt.subplots(figsize=(8, 6))
-            sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
-                       xticklabels=['Non-Diabetic', 'Diabetic'],
-                       yticklabels=['Non-Diabetic', 'Diabetic'])
-            ax.set_xlabel('Predicted')
-            ax.set_ylabel('Actual')
-            ax.set_title('Confusion Matrix')
-            st.pyplot(fig)
+            if model is not None:
+                st.success(train_message)
+                
+                # Model evaluation
+                y_pred = model.predict(X_test)
+                accuracy = accuracy_score(y_test, y_pred)
+                
+                st.metric("Model Accuracy", f"{accuracy:.2%}")
+                
+                # Feature importance
+                st.subheader("Feature Importance")
+                feature_importance = pd.DataFrame({
+                    'feature': X_test.columns,
+                    'importance': model.feature_importances_
+                }).sort_values('importance', ascending=True)
+                
+                fig, ax = plt.subplots(figsize=(10, 6))
+                ax.barh(feature_importance['feature'], feature_importance['importance'])
+                ax.set_xlabel('Importance')
+                ax.set_title('Feature Importance in Diabetes Prediction')
+                st.pyplot(fig)
+                
+                # Confusion Matrix
+                st.subheader("Confusion Matrix")
+                cm = confusion_matrix(y_test, y_pred)
+                fig, ax = plt.subplots(figsize=(8, 6))
+                sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
+                           xticklabels=['Non-Diabetic', 'Diabetic'],
+                           yticklabels=['Non-Diabetic', 'Diabetic'])
+                ax.set_xlabel('Predicted')
+                ax.set_ylabel('Actual')
+                ax.set_title('Confusion Matrix')
+                st.pyplot(fig)
+            else:
+                st.error(f"Training failed: {train_message}")
     
     # Show dataset distribution
     st.markdown("---")
@@ -333,24 +461,30 @@ def model_training_mode():
     
     with col_dist1:
         # Outcome distribution
-        fig, ax = plt.subplots(figsize=(8, 6))
-        data['Outcome'].value_counts().plot(kind='bar', ax=ax, color=['lightblue', 'salmon'])
-        ax.set_title('Diabetes Outcome Distribution')
-        ax.set_xlabel('Outcome (0: Non-Diabetic, 1: Diabetic)')
-        ax.set_ylabel('Count')
-        st.pyplot(fig)
+        if 'Outcome' in data.columns:
+            fig, ax = plt.subplots(figsize=(8, 6))
+            data['Outcome'].value_counts().plot(kind='bar', ax=ax, color=['lightblue', 'salmon'])
+            ax.set_title('Diabetes Outcome Distribution')
+            ax.set_xlabel('Outcome (0: Non-Diabetic, 1: Diabetic)')
+            ax.set_ylabel('Count')
+            st.pyplot(fig)
+        else:
+            st.info("No 'Outcome' column available for distribution plot")
     
     with col_dist2:
         # Glucose distribution by outcome
-        fig, ax = plt.subplots(figsize=(8, 6))
-        for outcome in [0, 1]:
-            subset = data[data['Outcome'] == outcome]
-            ax.hist(subset['Glucose'], alpha=0.7, label=f'Outcome {outcome}', bins=20)
-        ax.set_title('Glucose Distribution by Outcome')
-        ax.set_xlabel('Glucose Level')
-        ax.set_ylabel('Frequency')
-        ax.legend()
-        st.pyplot(fig)
+        if 'Outcome' in data.columns and 'Glucose' in data.columns:
+            fig, ax = plt.subplots(figsize=(8, 6))
+            for outcome in [0, 1]:
+                subset = data[data['Outcome'] == outcome]
+                ax.hist(subset['Glucose'], alpha=0.7, label=f'Outcome {outcome}', bins=20)
+            ax.set_title('Glucose Distribution by Outcome')
+            ax.set_xlabel('Glucose Level')
+            ax.set_ylabel('Frequency')
+            ax.legend()
+            st.pyplot(fig)
+        else:
+            st.info("Required columns not available for distribution plot")
 
 if __name__ == "__main__":
     main()
